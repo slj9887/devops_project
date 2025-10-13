@@ -29,9 +29,11 @@ pipeline {
             }
     }
     steps {
-        sh 'mvn -B -DskipTests clean package'
-        }
+        sh 'mvn -B -DskipTests clean package spring-boot:repackage'
+        sh 'ls -al target | sed -n "1,200p"'   // 빌드 산출물 확인
     }
+    }
+
 
     stage('Verify JAR') {
         steps {
