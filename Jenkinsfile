@@ -21,6 +21,18 @@ pipeline {
       }
     }
 
+    stage('Build JAR') {
+        agent {
+            docker {
+            image 'maven:3.9.9-eclipse-temurin-17'
+            args '-v $WORKSPACE/.m2:/root/.m2'
+            }
+    }
+    steps {
+        sh 'mvn -B -DskipTests clean package'
+        }
+    }
+
     stage('Verify JAR') {
         steps {
             sh 'ls -al target || true'
@@ -28,18 +40,6 @@ pipeline {
         }
     }
 
-
-    stage('Build JAR') {
-    agent {
-        docker {
-        image 'maven:3.9.9-eclipse-temurin-17'
-        args '-v $WORKSPACE/.m2:/root/.m2'
-        }
-    }
-    steps {
-        sh 'mvn -B -DskipTests clean package'
-    }
-    }
 
 
     stage('Build Docker image') {
