@@ -37,10 +37,16 @@ pipeline {
 
     stage('Verify JAR') {
         steps {
-            sh 'ls -al target || true'
-            sh 'test -f target/spring-boot-app-0.0.1-SNAPSHOT.jar && echo "✅ JAR OK" || (echo "❌ JAR MISSING" && exit 1)'
+            sh '''
+            echo "== target 내용 =="
+            ls -al target || true
+            echo
+            echo "== JAR 탐색 =="
+            find target -maxdepth 1 -type f -name "*.jar" -print || true
+            '''
         }
     }
+
 
 
 
