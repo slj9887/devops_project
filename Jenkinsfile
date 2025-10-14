@@ -11,6 +11,8 @@ pipeline {
     IMAGE_REGISTRY_URL     = 'amdp-registry.skala-ai.com'
     IMAGE_REGISTRY_PROJECT = 'devops_project'
     DOCKER_CREDENTIAL_ID   = 'skala-image-registry-id'
+
+    IMAGE_URI              = 'amdp-registry.skala-ai.com/skala25a/sk074-devops-project-spring:1.0.0'
   }
 
   stages {
