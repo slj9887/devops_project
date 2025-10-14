@@ -6,7 +6,7 @@ pipeline {
     GIT_BRANCH             = 'main'
     GIT_ID                 = 'skala-github-id'
 
-    IMAGE_NAME             = 'devops-project-spring'
+    IMAGE_NAME             = 'sk074-devops-project-spring'
     IMAGE_TAG              = '1.0.0'
     IMAGE_REGISTRY_URL     = 'amdp-registry.skala-ai.com'
     IMAGE_REGISTRY_PROJECT = 'devops_project'
