@@ -21,18 +21,26 @@ pipeline {
       }
     }
 
-    stage('Build JAR') {
-      agent {
-        docker {
-          image 'maven:3.9.9-eclipse-temurin-17'
-          args '-v $WORKSPACE/.m2:/root/.m2'
-        }
-      }
-      steps {
-        sh 'mvn -B -DskipTests clean package spring-boot:repackage'
-        sh 'ls -al target | sed -n "1,200p"'
+  stage('Build JAR') {
+    agent {
+      docker {
+        image 'maven:3.9.9-eclipse-temurin-17'
+        args '-v $WORKSPACE/.m2:/root/.m2'
       }
     }
+    steps {
+      sh '''#!/bin/bash
+      set -euo pipefail
+      rm -rf "$WORKSPACE/.m2/repository/org/codehaus/plexus/plexus-utils"
+      mvn -B -DskipTests \
+        -Dmaven.wagon.http.retryHandler.count=3 \
+        -Dhttps.protocols=TLSv1.2 \
+        --no-transfer-progress \
+        clean package spring-boot:repackage
+      '''
+    }
+  }
+
 
     stage('Verify JAR') {
       steps {
