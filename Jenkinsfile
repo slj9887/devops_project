@@ -6,10 +6,10 @@ pipeline {
     GIT_BRANCH             = 'main'
     GIT_ID                 = 'skala-github-id'
 
-    IMAGE_NAME             = 'spring-boot-app'
+    IMAGE_NAME             = 'devops-project-spring'
     IMAGE_TAG              = '1.0.0'
     IMAGE_REGISTRY_URL     = 'amdp-registry.skala-ai.com'
-    IMAGE_REGISTRY_PROJECT = 'library'
+    IMAGE_REGISTRY_PROJECT = 'devops_project'
     DOCKER_CREDENTIAL_ID   = 'skala-image-registry-id'
   }
 
