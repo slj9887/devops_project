@@ -22,61 +22,65 @@ pipeline {
     }
 
     stage('Build JAR') {
-        agent {
-            docker {
-            image 'maven:3.9.9-eclipse-temurin-17'
-            args '-v $WORKSPACE/.m2:/root/.m2'
-            }
-    }
-    steps {
+      agent {
+        docker {
+          image 'maven:3.9.9-eclipse-temurin-17'
+          args '-v $WORKSPACE/.m2:/root/.m2'
+        }
+      }
+      steps {
         sh 'mvn -B -DskipTests clean package spring-boot:repackage'
-        sh 'ls -al target | sed -n "1,200p"'   // 빌드 산출물 확인
+        sh 'ls -al target | sed -n "1,200p"'
+      }
     }
-    }
-
 
     stage('Verify JAR') {
-        steps {
-            sh '''
-            echo "== target 내용 =="
-            ls -al target || true
-            echo
-            echo "== JAR 탐색 =="
-            find target -maxdepth 1 -type f -name "*.jar" -print || true
-            '''
-        }
+      steps {
+        sh '''
+        echo "== target 내용 ==" && ls -al target || true
+        echo
+        echo "== JAR 탐색 ==" && find target -maxdepth 1 -type f -name "*.jar" -print || true
+        '''
+      }
     }
 
+    // ✅ Harbor 로그인: withCredentials + password-stdin + Groovy 보간 금지
     stage('Registry Login') {
-        steps {
-            withCredentials([usernamePassword(credentialsId: 'skala-image-registry-id', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-            sh 'echo "$REG_PASS" | docker login amdp-registry.skala-ai.com -u "$REG_USER" --password-stdin'
-            }
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: "${DOCKER_CREDENTIAL_ID}",
+          usernameVariable: 'REG_USER',
+          passwordVariable: 'REG_PASS'
+        )]) {
+          sh '''#!/bin/bash
+          set -euo pipefail
+          echo "$REG_PASS" | docker login amdp-registry.skala-ai.com -u "$REG_USER" --password-stdin
+          '''
         }
+      }
     }
-
-
-
 
     stage('Build Docker image') {
       steps {
         script {
-          sh """
-            docker build -t ${IMAGE_REGISTRY_URL}/${IMAGE_REGISTRY_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} .
-          """
+          env.IMAGE_URI = "${IMAGE_REGISTRY_URL}/${IMAGE_REGISTRY_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}"
+          sh '''#!/bin/bash
+          set -euo pipefail
+          docker build -t "$IMAGE_URI" .
+          '''
         }
       }
     }
 
     stage('Push Docker image') {
       steps {
-        withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIAL_ID}", usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
-          sh """
-            echo "${REG_PASS}" | docker login ${IMAGE_REGISTRY_URL} -u "${REG_USER}" --password-stdin
-            docker push ${IMAGE_REGISTRY_URL}/${IMAGE_REGISTRY_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
-            docker logout ${IMAGE_REGISTRY_URL}
-          """
-        }
+        // ❌ (기존) """ ... ${REG_PASS} ... """ → 경고 발생
+        // ✅ (수정) 셸에서 변수 확장: 비밀 노출 경고 X
+        sh '''#!/bin/bash
+        set -euo pipefail
+        docker push "$IMAGE_URI"
+        docker logout "${IMAGE_REGISTRY_URL}"
+        '''
       }
     }
   }
